@@ -1,0 +1,13 @@
+{
+    "name": "gaetanovallarelli/wordpress_wpml_posts",
+    "description": "Wordpress Plugin for WPML. Shows posts and pages grouped with each available translation",
+    "type": "library",
+   
+    "authors": [
+        {
+            "name": "Biro",
+            "email": "g.vallarelli@gmail.com"
+        }
+    ],
+    "require": {}
+}
