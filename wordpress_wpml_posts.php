@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Wordpress WPML Posts
  * Description: Show grouped post on REST Api by language
- * Version: 1.0
+ * Version: 1.0.2
  * Author: Biro
  * Author URI: https://github.com/biroplane
  */
