@@ -10,6 +10,14 @@
  
  define('ROOT_API','qubired/v2');
  define('BASE_URL','/locales');
+
+ function add_taxonomies_to_pages() {
+    register_taxonomy_for_object_type( 'post_tag', 'page' );
+    register_taxonomy_for_object_type( 'category', 'page' );
+} 
+
+add_action( 'init', 'add_taxonomies_to_pages' );
+
  add_action('init', 'wordpress_wpml_posts');
  function wordpress_wpml_posts()
  {
@@ -21,6 +29,7 @@
             'callback' => 'get_post_translated', 
             'methods' => 'GET',
             'args'=>array(
+            'return_type'=>'post',
             'categories'=>array(
                 'validate_callback'=>function($param,$request,$key){
                     // print_r($param);
@@ -29,9 +38,36 @@
                     return is_numeric($param);
                 }
             ),
-            'tags'=>array(
+            'tag'=>array(
                 'validate_callback'=>function($param,$request,$key){
+                    return esc_html($param);
+                }
+            ),
+            'exact_date'=>array(
+                'validate_callback'=>function($param,$request,$key){
+                    return preg_match('/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/',$param);
+                }
+            )
+            )
+        ));
+      register_rest_route(ROOT_API, BASE_URL.'/pages', 
+        array(
+            'callback' => 'get_post_translated', 
+            'methods' => 'GET',
+            'args'=>array(
+            'return_type'=>'page',
+            'categories'=>array(
+                'return_type'=>'page',
+                'validate_callback'=>function($param,$request,$key){
+                    // print_r($param);
+                    // print_r($request);
+                    // print_r($key);
                     return is_numeric($param);
+                }
+            ),
+            'tag'=>array(
+                'validate_callback'=>function($param,$request,$key){
+                    return esc_html($param);
                 }
             ),
             'exact_date'=>array(
@@ -54,13 +90,12 @@
                 
             )
         ));
-        register_rest_route(ROOT_API, BASE_URL.'/pages', 
-        array(
-            'callback' => 'get_page_translated',
-            'methods' => 'GET',
-            
-        )
-      );
+    //     register_rest_route(ROOT_API, BASE_URL.'/pages', 
+    //     array(
+    //         'callback' => 'get_page_translated',
+    //         'methods' => 'GET',
+    //     )
+    //   );
       register_rest_route(ROOT_API, BASE_URL.'/pages/(?P<id>\d+)', 
         array(
             'callback' => 'get_single_page_translated', 
@@ -80,38 +115,40 @@
  //die;
  }
 
- function get_page_translated($data){
-  $args = array(
-      'posts_per_page'   => -1,
-      'orderby'          => 'date',
-      'order'            => 'ASC',
-      'post_type'        => 'page',
-      'suppress_filters' => 0 
-  );
-  $postQuery =  get_posts($args);
-  $localizedPosts = formatResponse($postQuery);
-  return $localizedPosts;
-}
+//  function get_page_translated($data){
+//   $args = array(
+//       'posts_per_page'   => -1,
+//       'orderby'          => 'date',
+//       'order'            => 'ASC',
+//       'post_type'        => 'page',
+//       'suppress_filters' => 0 
+//   );
+//   $postQuery =  get_posts($args);
+//   $localizedPosts = formatResponse($postQuery);
+//   return $localizedPosts;
+// }
  function get_post_translated($data){
      
-    
+    if(!empty($data->get_attributes())){
+        $attrs = $data->get_attributes();
+        $return_type = $attrs['args']['return_type'];
+    }
   $args = array(
       'posts_per_page'   => -1,
       'orderby'          => 'date',
       'order'            => 'ASC',
-      'post_type'        => 'post',
-            
+      'post_type'        => $return_type,
       'suppress_filters' => 0 
   );
   if(!empty($data['categories'])){
     $args['category'] = $data['categories'];
   }
-  if(!empty($data['tags'])){
+  if(!empty($data['tag'])){
     $args['tax_query']        = array(
         array(
             'taxonomy'   => 'post_tag',
             'field'      => 'name',
-            'terms'      => $data['tags']
+            'terms'      => $data['tag']
         )
         );
   }
@@ -124,7 +161,8 @@
 
     );
  }
-
+ 
+ //print_r($args);
   $postQuery =  get_posts($args);
 
   $localizedPosts = formatResponse($postQuery);
@@ -196,7 +234,7 @@ function get_single_page_translated($data){
               $newPosts = array_map(function($obj) use (&$post, $image, $categories,$tags){
                   //print $g;
                   //$newPost = $post;
-                  $arrayPost = (array) $post;
+                  $arrayPost = (array) get_post($obj->element_id);
                   //print_r($obj);
                   //print $obj->language_code."\n";
                   $field = get_post_field('post_name',$obj->element_id);
