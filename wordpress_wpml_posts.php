@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Wordpress WPML Posts
  * Description: Show grouped post on REST Api by language
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: Biro
  * Author URI: https://github.com/biroplane
  */
@@ -426,7 +426,7 @@ function listPosts( $posts ) {
 			$image = get_the_post_thumbnail_url( $post );
 			//$image = wp_get_attachment_image_src($post);
 		}
-		$categories = wp_get_post_categories( $post->ID );
+		$categories = wp_get_post_categories( $post->ID, array( 'fields' => 'all' ) );
 		$tags       = wp_get_post_tags( $post->ID );
 
 		$trid  = apply_filters( 'wpml_element_trid', null, $post->ID );
@@ -434,16 +434,20 @@ function listPosts( $posts ) {
 
 
 		//print_r($group[$locale['language_code']]);
+		$post->post_author    = array(
+			'id'   => get_post_field( 'post_author', $post->ID ),
+			'name' => get_the_author_meta( 'display_name', get_post_field( 'post_author', $post->ID ) )
+		);
 		$post->locale         = $locale['language_code'];
-		//$field                = get_post_field( 'post_name', (array) $group[$locale['language_code']]->element_id,'raw' );
-		//$post->locale_slug    = $field;
 		$post->featured_image = $image;
 		$post->categories     = $categories;
 		$post->tags           = $tags;
-		$post->is_sticky = is_sticky($post->ID);
+		$post->is_sticky      = is_sticky( $post->ID );
 		$post->related        = array_values( array_filter( $group, function ( $g ) use ( $locale ) {
-			$field                = get_post_field( 'post_name',$g->element_id);
-			$g->locale_slug    = $field;
+			$field            = get_post_field( 'post_name', $g->element_id );
+			$g->locale_slug   = $field;
+			$g->category_slug = @wp_get_post_categories( $g->element_id, array( 'fields' => 'slugs' ) )[0];
+
 			return $g->language_code != $locale['language_code'];
 		} ) );
 
@@ -461,12 +465,12 @@ function listPosts( $posts ) {
 	// }
 }
 
-function groupPosts($posts){
-	$list = listPosts($posts);
+function groupPosts( $posts ) {
+	$list = listPosts( $posts );
 
 	$group = [];
-	foreach ($posts as $post){
-		$group[$post->locale][]=$post;
+	foreach ( $list as $post ) {
+		$group[ $post->locale ][] = $post;
 	}
 
 	return $group;
