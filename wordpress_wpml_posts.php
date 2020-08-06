@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Wordpress WPML Posts
  * Description: Show grouped post on REST Api by language
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Biro
  * Author URI: https://github.com/biroplane
  */
@@ -440,6 +440,7 @@ function listPosts( $posts ) {
 		$post->featured_image = $image;
 		$post->categories     = $categories;
 		$post->tags           = $tags;
+		$post->is_sticky = is_sticky($post->ID);
 		$post->related        = array_values( array_filter( $group, function ( $g ) use ( $locale ) {
 			$field                = get_post_field( 'post_name',$g->element_id);
 			$g->locale_slug    = $field;
