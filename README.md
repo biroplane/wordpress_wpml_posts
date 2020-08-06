@@ -6,7 +6,7 @@ This plugin enables a new Route in WordPress API
 
 Under those routes you can find:
 
-```JSON
+```YAML
 "/qubired/v2/locales/posts"
 "/qubired/v2/locales/posts/(?P\d+)"
 "/qubired/v2/locales/pages"
