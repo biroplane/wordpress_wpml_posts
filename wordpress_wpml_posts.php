@@ -19,6 +19,15 @@ function add_taxonomies_to_pages() {
 add_action( 'init', 'add_taxonomies_to_pages' );
 
 add_action( 'init', 'wordpress_wpml_posts' );
+add_action('pre_get_terms',function($query){
+
+	print_r($query);
+	$query->query['suppress_filters'] = true;
+	$query->meta_query['suppress_filters'] = true;
+	$query->query_vars['suppress_filters'] = true;
+
+
+});
 add_action('pre_get_posts',function($query){
 
 
@@ -607,6 +616,6 @@ function add_related_tag_field($post){
 		$g->locale_slug   = $field;
 		$g->category_slug = @wp_get_post_categories( $g->element_id, array( 'fields' => 'slugs' ) )[0];
 
-		return $g->language_code != $locale['language_code'];
+		return $g->language_code != $locale->language_code;
 	} ) );
 }
