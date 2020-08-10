@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Wordpress WPML Posts
  * Description: Show grouped post on REST Api by language
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Biro
  * Author URI: https://github.com/biroplane
  */
@@ -23,6 +23,7 @@ add_action('pre_get_posts',function($query){
 	//if(empty($query->query_vars['suppress_filter'])){
 
 	$query->query['suppress_filters'] = true;
+	$query->query_vars['suppress_filters'] = true;
 
 	/*$query->query_vars['suppress_filters'] = true;
 
