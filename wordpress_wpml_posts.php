@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Wordpress WPML Posts
  * Description: Show grouped post on REST Api by language
- * Version: 1.1.1
+ * Version: 1.1.2
  * Author: Biro
  * Author URI: https://github.com/biroplane
  */
@@ -27,6 +27,7 @@ add_action('pre_get_posts',function($query){
 
 
 });
+
 function wordpress_wpml_posts() {
 	if ( function_exists( 'icl_object_id' ) ) {
 
@@ -38,8 +39,20 @@ function wordpress_wpml_posts() {
 				'schema'          => null
 			) );
 
+			register_rest_field( array("tag", "category"), 'locale', array(
+				'get_callback'    => 'add_locale_tag_field',
+				'update_callback' => null,
+				'schema'          => null
+			) );
+
 			register_rest_field( array( "post", "page" ), 'related', array(
 				'get_callback'    => 'add_related_field',
+				'update_callback' => null,
+				'schema'          => null
+			) );
+
+			register_rest_field( array( "tag", "category" ), 'related', array(
+				'get_callback'    => 'add_related_tag_field',
 				'update_callback' => null,
 				'schema'          => null
 			) );
@@ -558,6 +571,13 @@ function add_locale_field($post){
 	return $locale['language_code'];
 }
 
+function add_locale_tag_field($tag){
+
+	$locale = apply_filters( 'wpml_element_language_details', null, array('element_id'=> $tag['id'],'element_type'=>'post_tag' ));
+	return $locale->language_code;
+
+}
+
 function add_related_field($post){
 	$locale = apply_filters( 'wpml_post_language_details', null, $post['id'] );
 
@@ -575,3 +595,18 @@ function add_related_field($post){
 }
 
 
+function add_related_tag_field($post){
+	$locale = apply_filters( 'wpml_element_language_details', null, array('element_id'=> $post['id'],'element_type'=>'post_tag' ) );
+
+
+	$trid  = apply_filters( 'wpml_element_trid', null, $post['id']);
+	$group = apply_filters( 'wpml_get_element_translations', null, $trid );
+
+	return array_values( array_filter( $group, function ( $g ) use ( $locale ) {
+		$field            = get_post_field( 'post_name', $g->element_id );
+		$g->locale_slug   = $field;
+		$g->category_slug = @wp_get_post_categories( $g->element_id, array( 'fields' => 'slugs' ) )[0];
+
+		return $g->language_code != $locale['language_code'];
+	} ) );
+}
