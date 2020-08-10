@@ -19,9 +19,25 @@ function add_taxonomies_to_pages() {
 add_action( 'init', 'add_taxonomies_to_pages' );
 
 add_action( 'init', 'wordpress_wpml_posts' );
+add_action('pre_get_posts',function($query){
+	//if(empty($query->query_vars['suppress_filter'])){
+
+	$query->query['suppress_filters'] = true;
+
+	/*$query->query_vars['suppress_filters'] = true;
+
+
+	if( !$query->get( 'suppress_filters' ) ) {
+		$query->set( 'suppress_filters', true );
+	}*/
+	//print_r($query);
+	//}
+});
 function wordpress_wpml_posts() {
 	if ( function_exists( 'icl_object_id' ) ) {
+
 		add_action( 'rest_api_init', function () {
+
 			register_rest_field( array( "post", "page" ), 'locale', array(
 				'get_callback'    => 'add_locale_field',
 				'update_callback' => null,
