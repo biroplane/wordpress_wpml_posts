@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Wordpress WPML Posts
  * Description: Show grouped post on REST Api by language
- * Version: 1.0.4
+ * Version: 1.1.1
  * Author: Biro
  * Author URI: https://github.com/biroplane
  */
@@ -19,9 +19,32 @@ function add_taxonomies_to_pages() {
 add_action( 'init', 'add_taxonomies_to_pages' );
 
 add_action( 'init', 'wordpress_wpml_posts' );
+add_action('pre_get_posts',function($query){
+
+
+	$query->query['suppress_filters'] = true;
+	$query->query_vars['suppress_filters'] = true;
+
+
+});
 function wordpress_wpml_posts() {
 	if ( function_exists( 'icl_object_id' ) ) {
+
 		add_action( 'rest_api_init', function () {
+
+			register_rest_field( array( "post", "page" ), 'locale', array(
+				'get_callback'    => 'add_locale_field',
+				'update_callback' => null,
+				'schema'          => null
+			) );
+
+			register_rest_field( array( "post", "page" ), 'related', array(
+				'get_callback'    => 'add_related_field',
+				'update_callback' => null,
+				'schema'          => null
+			) );
+
+
 			register_rest_route(
 				ROOT_API,
 				'list/posts',
@@ -523,6 +546,32 @@ function formatResponse( $posts ) {
 	}
 
 	return $localizedPosts;
+}
+
+
+
+function add_locale_field($post){
+	//print_r($post);
+	$locale = apply_filters( 'wpml_post_language_details', null, $post['id'] );
+
+
+	return $locale['language_code'];
+}
+
+function add_related_field($post){
+	$locale = apply_filters( 'wpml_post_language_details', null, $post['id'] );
+
+
+	$trid  = apply_filters( 'wpml_element_trid', null, $post['id']);
+	$group = apply_filters( 'wpml_get_element_translations', null, $trid );
+
+	return array_values( array_filter( $group, function ( $g ) use ( $locale ) {
+		$field            = get_post_field( 'post_name', $g->element_id );
+		$g->locale_slug   = $field;
+		$g->category_slug = @wp_get_post_categories( $g->element_id, array( 'fields' => 'slugs' ) )[0];
+
+		return $g->language_code != $locale['language_code'];
+	} ) );
 }
 
 
