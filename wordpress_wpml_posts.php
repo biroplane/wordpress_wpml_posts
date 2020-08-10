@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Wordpress WPML Posts
  * Description: Show grouped post on REST Api by language
- * Version: 1.1.2
+ * Version: 1.1.3
  * Author: Biro
  * Author URI: https://github.com/biroplane
  */
@@ -19,15 +19,7 @@ function add_taxonomies_to_pages() {
 add_action( 'init', 'add_taxonomies_to_pages' );
 
 add_action( 'init', 'wordpress_wpml_posts' );
-add_action('pre_get_terms',function($query){
 
-	print_r($query);
-	$query->query['suppress_filters'] = true;
-	$query->meta_query['suppress_filters'] = true;
-	$query->query_vars['suppress_filters'] = true;
-
-
-});
 add_action('pre_get_posts',function($query){
 
 
